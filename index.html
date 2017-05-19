@@ -1,0 +1,115 @@
+<!doctype html>
+<head>
+    <title>BPM Test</title>
+
+    <script src="lib/jquery-3.2.1.min.js" onload="window.$ = window.jQuery = module.exports;"></script>
+    <script src="lib/LeSequencer.js"></script>
+    <style>
+        html {
+            font-size: 20px;
+            font-family: sans-serif;
+        }
+        .button {
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        #bpm { font-size: 30px; }
+    </style>
+</head>
+
+<body>
+    <!--
+    <div class="button" id="incr">BPM ↑</div>
+    <div class="button" id="decr">BPM ↓</div>
+
+    <div id="bpm">80</div>-->
+
+    <script type="text/javascript">
+        /*
+        $("#incr").click(function(){
+            Sequencer.setBPM(Sequencer.getBPM() + 10);
+            $("#bpm").html(Sequencer.getBPM());
+        });
+
+        $("#decr").click(function(){
+            Sequencer.setBPM(Sequencer.getBPM() - 10);
+            $("#bpm").html(Sequencer.getBPM());
+        });*/
+	
+        var Pizzicato = require('pizzicato');
+
+        // setup sounds
+        function getSound(file){
+            return new Pizzicato.Sound({
+                source: "file",
+                options: {
+                    path: "./samples/"+file+".wav",
+                    attack: 0
+                }
+            });
+        }
+
+        // setup sounds
+        var k = getSound("kick");
+        var h = getSound("closed-hi-hat");
+        var v = getSound("ooh");
+        var s = getSound("snare");
+        var b = getSound("bass");
+        var y = getSound("synth");
+        var L = getSound("bell");
+        var a = getSound("ahh");
+        var _ = null;
+
+        // define beat grid (quarter notes)
+        var grid = [
+            [ k,_,_,_,  k,_,_,_,  k,_,_,_,  k,_,_,_ ],
+            [ _,_,_,_,  _,_,_,_,  v,_,_,_,  v,_,_,_ ],
+            [ h,h,h,h,  h,h,h,h,  h,h,h,h,  h,h,h,h ],
+            [ s,s,_,_,  _,_,_,_,  s,s,_,_,  _,_,_,_ ],
+            [ _,_,_,_,  b,_,b,_,  _,_,_,_,  _,_,_,_ ],
+            [ _,_,_,_,  y,_,_,_,  _,_,_,_,  _,_,_,_ ],
+            [ _,_,_,_,  _,_,_,_,  _,_,_,L,  _,_,_,_ ],
+            [ _,_,_,_,  _,_,_,_,  _,_,_,_,  a,_,_,_ ]
+        ];
+
+        // setup sequencer
+        var cur_step = 0;
+
+        Sequencer.init({
+            bpm: 120,
+            tpb: 4,
+            loop: true
+        });
+
+        var newScene = Sequencer.register(0, {
+            duration: 16, // 16 quarter notes grid width
+            play: function(now, tick, beat, tickFired, beatFired){
+                if(tickFired){
+                    
+                    for( var i=0; i<grid.length; i++){
+                        var samp = grid[i][cur_step];
+                        if( samp == null ) continue;
+                        samp.clone().play();
+                    }
+
+                    cur_step++;
+                    if( cur_step == grid[0].length ) cur_step = 0;
+                }
+            }
+        });
+
+        // give time for samples to load async
+        setTimeout(function(){
+            startTime = +(new Date);
+            Sequencer.play(0);
+            requestAnimationFrame(main);
+            
+            function main(t) {
+                Sequencer.play(+(new Date) - startTime)
+                requestAnimationFrame(main)
+            }
+        }, 3000);
+	
+    </script>
+</body>
